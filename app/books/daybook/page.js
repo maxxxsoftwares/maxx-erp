@@ -38,7 +38,7 @@ export default function DayBook() {
             <td>{v.vdate}</td><td>{ls.filter(l => l.dr > 0).map(l => l.ledgers?.name).join(', ')}</td><td>{t(v.vtype)}</td><td>{v.vno}<div className="muted">{v.fy}</div></td>
             <td className="num">{money(ls.reduce((s, l) => s + +l.dr, 0))}</td>
             <td style={{ whiteSpace: 'nowrap' }}><button className="ghost" onClick={e => { e.stopPropagation(); r.push('/books/edit/' + v.id); }}>{t('edit')}</button> <button className="ghost" onClick={e => { e.stopPropagation(); r.push('/books/print/' + v.id); }}>{t('print')}</button> <button className="ghost" onClick={e => { e.stopPropagation(); del(v.id); }}>{t('delete')}</button></td></tr>
-          {(open === v.id || all) && <tr key={v.id + 'd'}><td colSpan={6} style={{ background: '#fbf7dc' }}>
+          {(open === v.id || all) && <tr key={v.id + 'd'}><td colSpan={6} style={{ background: '#f1f5fd' }}>
             {ls.map((l, i) => <div key={i} style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
               <span>{l.dr > 0 ? 'Dr' : 'Cr'} {l.ledgers?.name}{l.metal ? ` (${l.gross_wt}g × ${l.purity}% = ${l.fine_wt}g fine @ ${l.rate})` : ''}</span><span>{money(l.dr > 0 ? l.dr : l.cr)}</span></div>)}
             {v.narration && <div className="muted">{v.narration}</div>}</td></tr>}</>); })}

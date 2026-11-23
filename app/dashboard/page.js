@@ -1,3 +1,4 @@
 'use client';
-// Blank desktop: the welcome message lives in the top bar (components/AppFrame.js)
-export default function Dashboard() { return <div className="desk" />; }
+// Blank desktop. The Add to Home Screen prompt only appears in a mobile browser.
+import InstallPrompt from '../../components/InstallPrompt';
+export default function Dashboard() { return <div className="desk"><InstallPrompt /></div>; }

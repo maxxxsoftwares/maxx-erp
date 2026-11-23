@@ -254,3 +254,41 @@ button.di,.di.off{margin:1px 8px;width:calc(100% - 16px);border-radius:8px;borde
 .mk-hl{outline:2px solid #0e1633;border-radius:10px;padding:4px 10px;display:inline-flex;align-items:center;gap:6px;font-weight:600}
 .mk-li.mk-hl{display:block;border-radius:8px}
 .mk-btn{background:#2563eb;color:#fff;border-radius:999px;padding:5px 16px;font-weight:700;outline:2px solid #0e1633}
+/* ---- top-bar overflow menu ---- */
+.topmenu{position:absolute;right:0;top:calc(100% + 6px);z-index:60;background:#fff;color:var(--ink);border:1px solid var(--line);border-radius:10px;box-shadow:0 10px 28px rgba(10,20,100,.18);padding:6px;min-width:160px}
+.topmenu button{display:block;width:100%;text-align:left;min-height:38px;padding:0 12px;border:0;border-radius:6px;background:transparent;color:var(--ink);font-weight:500}
+.topmenu button:hover{background:#eef1fb}
+.topmenu button.danger{color:#b3392f}
+.wel .role{opacity:.85;font-weight:400}
+
+/* ---- mobile: stop any screen getting cut off ---- */
+html,body{overflow-x:hidden;max-width:100vw}
+.fname,.wel,.wel .wt{min-width:0}
+.wrap{overflow-x:auto}
+.row{flex-wrap:wrap}
+@media (max-width:480px){
+  .fbar{padding:6px 8px;gap:6px}
+  .fname{font-size:14px}
+  .wel .wt{display:none}
+  .wel .av{margin-right:2px}
+  .rcell{flex:1 1 46%}
+  .calc{right:8px;left:8px;width:auto;bottom:70px}
+  .a2hs{margin:10px}
+  .gd{padding:18px 14px 14px}
+}
+.badge{display:inline-block;margin-left:6px;padding:1px 8px;border-radius:999px;font-size:11px;font-weight:700}
+.welcome-banner{display:block;width:100%;max-height:260px;object-fit:cover;border-radius:0 0 18px 18px}
+
+/* WG column styling for white/gray entries */
+.wg-white{background:#d7ead9;padding:2px 8px;border-radius:4px;font-size:12px;font-weight:600;color:#1a5c2e}
+.wg-gray{background:#f3c9c4;padding:2px 8px;border-radius:4px;font-size:12px;font-weight:600;color:#8f2d24}
+
+/* Password settings page */
+.password-card{max-width:500px;margin:0 auto}
+.password-card .card{margin-bottom:12px}
+
+/* Mobile improvements for password settings */
+@media (max-width:480px){
+  .password-card{padding:0 8px}
+  .password-card input{min-height:44px}
+}

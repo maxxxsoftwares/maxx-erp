@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '../../lib/supabase';
-import { n2, r3, money, today } from '../../lib/acc';
+import { n2, r3, money, today, canPost } from '../../lib/acc';
 import { useT } from '../../lib/i18n';
 import Shell from './shell';
 
@@ -31,8 +31,9 @@ export default function Form({ b, type, initial }) {
     else if (row.mode === 'cash' && !ledger) ledger = cash[0]?.id;
     return { ledger, metal, amount: metal ? valOf(row, metal) : n2(row.amount), fine: metal ? fineOf(row) : null };
   };
-  const mk = (x, row, dr) => ({ ledger_id: x.ledger, dr: dr ? x.amount : 0, cr: dr ? 0 : x.amount, metal: x.metal,
-    gross_wt: x.metal ? +row.gross || null : null, purity: x.metal ? +row.purity || null : null, fine_wt: x.fine, rate: x.metal ? +row.rate || null : null });
+  const getWG = () => typeof window !== 'undefined' ? sessionStorage.getItem('entryMode') === 'gray' ? 'G' : '' : '';
+const mk = (x, row, dr) => ({ ledger_id: x.ledger, dr: dr ? x.amount : 0, cr: dr ? 0 : x.amount, metal: x.metal,
+    gross_wt: x.metal ? +row.gross || null : null, purity: x.metal ? +row.purity || null : null, fine_wt: x.fine, rate: x.metal ? +row.rate || null : null, wg: getWG() });
 
   const res = rows.map(resolve);
   let lines = [];
@@ -45,14 +46,20 @@ export default function Form({ b, type, initial }) {
   const dr = n2(lines.reduce((s, l) => s + l.dr, 0)), cr = n2(lines.reduce((s, l) => s + l.cr, 0));
   const ok = lines.length >= 2 && dr === cr && dr > 0;
 
+  const canPostNow = canPost(b.role);
   async function save() {
     if (!ok || busy) return; setBusy(true); setErr(''); setMsg('');
-    const { data, error } = initial?.id ? await supabase.rpc('update_voucher', { p: { id: initial.id, vdate: date, narration: narr, lines } }) : await supabase.rpc('save_voucher', { p: { vtype: type, vdate: date, narration: narr, lines } });
+    if (initial?.id && !canPostNow) { setBusy(false); return setErr(t('onlyOwnerEdit')); }
+    const { data, error } = initial?.id
+      ? await supabase.rpc('update_voucher', { p: { id: initial.id, vdate: date, narration: narr, lines } })
+      : canPostNow
+        ? await supabase.rpc('save_voucher', { p: { vtype: type, vdate: date, narration: narr, lines } })
+        : await supabase.rpc('create_voucher_draft', { p: { vtype: type, vdate: date, narration: narr, lines } });
     setBusy(false);
     if (error) return setErr(error.message);
     try { localStorage.setItem('lastNarr:' + type, narr); } catch {}
     if (initial?.id) return r.push('/books/daybook');
-    setMsg(`${t('saved')} ${t(type)} #${data}`); setParty(''); setNarr('');
+    setMsg(canPostNow ? `${t('saved')} ${t(type)} #${data}` : t('savedDraft')); setParty(''); setNarr('');
     setRows(isJ ? [{ ...blank(), side: 'Dr' }, { ...blank(), side: 'Cr' }] : [blank()]);
   }
   const ref = useRef(); ref.current = save;
@@ -113,6 +120,7 @@ export default function Form({ b, type, initial }) {
     <label>{t('narration')}</label><input value={narr} onChange={e => setNarr(e.target.value)} />
     {isJ && lines.length > 0 && <div className={ok ? 'ok' : 'err'}>{ok ? t('balanced') : t('notBalanced')}</div>}
     {err && <div className="err">{err}</div>}{msg && <div className="ok">{msg}</div>}
-    <button className="full gold" disabled={!ok || busy} onClick={save}>{t('save')} (Ctrl+A)</button>
+    {initial?.id && !canPostNow ? <div className="err">{t('onlyOwnerEdit')}</div> : null}
+    <button className="full gold" disabled={!ok || busy || (initial?.id && !canPostNow)} onClick={save}>{(canPostNow || initial?.id) ? t('save') : t('save') + ' (' + t('draftStatus') + ')'} (Ctrl+A)</button>
   </Shell>);
 }

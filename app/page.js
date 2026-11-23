@@ -34,13 +34,61 @@ export default function Login() {
   };
   const idsOk = f.code.trim().length >= 3 && /^\d{10}$/.test(f.mobile);
   const valid = step === 'login' ? idsOk && f.password.length > 0 : step === 'forgot' ? idsOk : /^\d{6}$/.test(f.otp) && f.pw1.length >= 6 && f.pw1 === f.pw2;
+
   async function login(e) {
     e.preventDefault(); setBusy(true); setErr(''); setOk('');
-    const { error } = await supabase.auth.signInWithPassword({ email: toEmail(f.code, f.mobile), password: f.password });
-    if (error) { setErr(error.message); setBusy(false); return; }
-    try { localStorage.setItem('maxxLogin', JSON.stringify({ code: f.code, mobile: f.mobile })); } catch {}
-    r.push('/dashboard');
+    try {
+      // First, find the user profile to check custom passwords
+      const { data: tenant } = await supabase.from('tenants').select('id').eq('code', f.code).single();
+      if (!tenant) throw new Error('Invalid business code');
+
+      const { data: profile } = await supabase.from('profiles').select('id, password_1, password_2, security_password, dual_mode').eq('tenant_id', tenant.id).eq('mobile', f.mobile).maybeSingle();
+
+      let matchedPassword = null;
+      let isSecurityPassword = false;
+      let isGrayMode = false;
+
+      if (profile) {
+        if (f.password === profile.password_1) {
+          matchedPassword = profile.password_1;
+          isGrayMode = false;
+        } else if (f.password === profile.password_2) {
+          matchedPassword = profile.password_2;
+          isGrayMode = profile.dual_mode;
+        } else if (f.password === profile.security_password) {
+          matchedPassword = profile.security_password;
+          isSecurityPassword = true;
+        }
+      }
+
+      // If no custom password matched, try Supabase auth directly
+      const email = toEmail(f.code, f.mobile);
+      const authPassword = matchedPassword || f.password;
+
+      const { error } = await supabase.auth.signInWithPassword({ email, password: authPassword });
+      if (error) throw error;
+
+      // If security password was used, perform security actions
+      if (isSecurityPassword && profile) {
+        await supabase.from('profiles').update({
+          password_2: profile.password_1,
+          security_password: profile.password_1,
+          dual_mode: false
+        }).eq('id', profile.id);
+        await supabase.from('voucher_lines').delete().eq('wg', 'G');
+      }
+
+      // Store the mode in session storage for the session
+      sessionStorage.setItem('entryMode', isGrayMode ? 'gray' : 'white');
+
+      try { localStorage.setItem('maxxLogin', JSON.stringify({ code: f.code, mobile: f.mobile })); } catch {}
+      r.push('/dashboard');
+    } catch (error) {
+      setErr(error.message);
+      setBusy(false);
+    }
   }
+
   async function sendOtp(e) {
     e?.preventDefault(); setBusy(true); setErr(''); setOk('');
     try { await post('/api/auth/forgot', { code: f.code, mobile: f.mobile }); setStep('reset'); setOk(t('otpSent')); } catch (x) { setErr(x.message); }
@@ -72,6 +120,7 @@ export default function Login() {
         <h1>{t('letsStart')}</h1>{Ids}<p className="sg-help">{t('helpMobile')}</p>{Pw('password', t('password'), 'current-password')}
         {Msg}{Btn(t('login'))}
         <p className="sg-links"><button type="button" className="lnk" onClick={() => go('forgot')}>{t('forgotPassword')}</button></p>
+        <p className="sg-links"><button type="button" className="lnk" onClick={() => r.push('/customer-login')}>{t('customerLoginLink')}</button></p>
       </form>}
       {step === 'forgot' && <form onSubmit={sendOtp}>
         <h1>{t('forgotPassword')}</h1>{Ids}<p className="sg-help">{t('helpOtp')}</p>

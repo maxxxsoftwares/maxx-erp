@@ -32,12 +32,12 @@ function Calc({ onClose }) {
 export default function AppFrame({ children }) {
   const { t, toggle } = useT(); const r = useRouter(); const path = usePathname();
   const [tn, setTn] = useState(null); const [many, setMany] = useState(false); const [open, setOpen] = useState(false);
-  const [openG, setOpenG] = useState({}); const [me, setMe] = useState(''); const [calc, setCalc] = useState(false); const [fly, setFly] = useState(null); const timer = useRef();
-  const st = tn?.setup_type, groups = st ? menuFor(st) : [];
+  const [openG, setOpenG] = useState({}); const [me, setMe] = useState(''); const [role, setRole] = useState(''); const [calc, setCalc] = useState(false); const [fly, setFly] = useState(null); const [menu, setMenu] = useState(false); const timer = useRef();
+  const st = tn?.setup_type, groups = st ? menuFor(st, role) : [];
   useEffect(() => { (async () => {
     const { data: { user } } = await supabase.auth.getUser(); if (!user) return r.replace('/');
-    const { data } = await supabase.from('profiles').select('name, tenants(name,setup_type)').eq('id', user.id).single();
-    if (!data?.tenants) return r.replace('/'); setTn(data.tenants); setMe(data.name || '');
+    const { data } = await supabase.from('profiles').select('name, role, tenants(name,setup_type)').eq('id', user.id).single();
+    if (!data?.tenants) return r.replace('/'); setTn(data.tenants); setMe(data.name || ''); setRole(data.role || '');
     const { count } = await supabase.from('user_tenants').select('tenant_id', { count: 'exact', head: true }); setMany((count || 0) > 1);
   })(); }, []);
   useEffect(() => { setOpen(false); setFly(null); }, [path]);
@@ -45,9 +45,9 @@ export default function AppFrame({ children }) {
   useEffect(() => {
     if (!st) return;
     const base = h => (h || '').split('#')[0];
-    const g = menuFor(st).find(x => x.items.some(i => base(hrefOf(i, st)) === path || (i.sub || []).some(s => base(hrefOf(s, st)) === path)));
+    const g = menuFor(st, role).find(x => x.items.some(i => base(hrefOf(i, st)) === path || (i.sub || []).some(s => base(hrefOf(s, st)) === path)));
     setOpenG(g ? { [g.k]: true } : {});
-  }, [st, path]);
+  }, [st, role, path]);
   const go = h => { setFly(null); setOpen(false); r.push(h); setTimeout(() => window.dispatchEvent(new HashChangeEvent('hashchange')), 120); };
 
   // Keyboard shortcuts for the items this setup can see
@@ -116,11 +116,17 @@ export default function AppFrame({ children }) {
     <div className="ftop"><div className="fbar">
       <button className="burger ghost" aria-label="Menu" onClick={() => setOpen(!open)}>☰</button>
       <b className="fname">{tn?.name || t('app')}</b>
-      <div className="wel">{me && <><span className="av">{me.split(/\s+/).map(w => w[0]).slice(0, 2).join('').toUpperCase()}</span><span className="wt">{t('welcome')}, <b>{me}</b></span></>}</div>
+      <div className="wel">{me && <><span className="av">{me.split(/\s+/).map(w => w[0]).slice(0, 2).join('').toUpperCase()}</span><span className="wt">{t('welcome')}, <b>{me}</b>{role && <span className="role"> · {t('role_' + role)}</span>}</span></>}</div>
       {many && <button className="ghost" onClick={() => r.push('/companies')}>{t('companies')}</button>}
-      <button className="ghost" title="Alt + N" onClick={() => setCalc(c => !c)}>{t('calculator')}</button>
-      <button className="ghost" onClick={toggle}>{t('lang')}</button>
-      <button className="ghost" onClick={async () => { await supabase.auth.signOut(); r.push('/'); }}>{t('signOut')}</button>
+      <div style={{ position: 'relative' }}>
+        <button className="ghost" aria-label={t('moreMenu')} aria-expanded={menu} onClick={() => setMenu(!menu)}>⋮</button>
+        {menu && <div className="scrim" style={{ background: 'transparent' }} onClick={() => setMenu(false)} />}
+        {menu && <div className="topmenu" onMouseLeave={() => setMenu(false)}>
+          <button onClick={() => { setCalc(c => !c); setMenu(false); }}>{t('calculator')}</button>
+          <button onClick={() => { toggle(); setMenu(false); }}>{t('lang')}</button>
+          <button className="danger" onClick={async () => { await supabase.auth.signOut(); r.push('/'); }}>{t('signOut')}</button>
+        </div>}
+      </div>
     </div>
     {['jewellery', 'girvi_loan'].includes(st) && <RateStrip />}</div>
     <div className="fbody">

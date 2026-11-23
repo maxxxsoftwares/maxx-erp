@@ -1,0 +1,11 @@
+{
+  "name": "Maxx ERP",
+  "short_name": "Maxx ERP",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f5f3ee",
+  "theme_color": "#1f3a34",
+  "icons": [
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

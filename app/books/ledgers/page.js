@@ -31,7 +31,7 @@ export default function Ledgers() {
   const items = useMemo(() => (which === 'ledger' ? ledgers : groups).filter(x => !q || x.name.toLowerCase().includes(q.toLowerCase())), [which, ledgers, groups, q]);
   useEffect(() => { document.querySelector('.li.on')?.scrollIntoView({ block: 'nearest' }); }, [idx, items, which]);
 
-  const map = e => /System ledgers/.test(e.message) ? t('locked') : /column|schema cache/.test(e.message) ? t('runSql2') : /duplicate/.test(e.message) ? t('nameExists') : /foreign/.test(e.message) ? t('ledgerInUse') : e.message;
+  const map = e => /System ledgers/.test(e.message) ? t('locked') : /column|schema cache/.test(e.message) ? t('runSql2') : /mobile_unique/.test(e.message) ? t('mobileExists') : /duplicate/.test(e.message) ? t('nameExists') : /foreign/.test(e.message) ? t('ledgerInUse') : e.message;
   const ref = k => el => { refs.current[k] = el; };
   const next = k => { const n = ORDER[ORDER.indexOf(k) + 1]; n ? refs.current[n]?.focus() : save(); };
   const enter = k => e => { if (e.key === 'Enter') { e.preventDefault(); next(k); } };

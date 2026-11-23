@@ -68,3 +68,34 @@ Email goes through Gmail SMTP: Settings > Email settings (sender Gmail + app pas
 
 ## Live rates on Vercel
 Vercel cannot keep a connection open, so on Vercel the server connects for a few seconds, saves the latest ticks in `mcx_rates` (run `supabase/mcx.sql`) and the strip refreshes about every 8 seconds. On localhost or your own server it stays connected and is truly live. Set NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY and SUPABASE_SERVICE_ROLE_KEY (and MCX_HUB_URL if changed) in the Vercel project settings, then redeploy.
+
+## Drafts, approval and audit trail (instead of a hidden "grey" ledger)
+Run `supabase/drafts_audit.sql` after capital.sql. Owners and managers still post vouchers directly, exactly as before.
+Every other role (salesman, accountant, karigar, operator) now saves a voucher as a **draft**: it gets no voucher number
+and does not appear in any report until an owner or manager approves it (Display > Pending Approvals, or directly in
+Day Book, which shows a Draft/Rejected badge). Nothing posted can be deleted without a logged record of who deleted it
+and what was in it (Display > Audit Log, owner/manager only). A draft's own creator can delete their own unapproved draft.
+
+## Password change
+Settings > Update Password. Asks for the current password, re-checks it, then changes it. Same single password used at login.
+
+## Top bar
+Calculator, language and Sign out moved behind a single "⋮" menu button at the top right, to keep the bar narrow on
+phones. The welcome message now also shows the signed-in user's role (Owner, Manager, Salesman, Accountant, Karigar, Operator).
+
+## Mobile-friendly
+Removed horizontal scroll and the three-button crowding that could cut off on narrow phones; wide tables now scroll
+inside their own box instead of widening the page.
+
+## Company welcome image (owner only)
+Run `supabase/company_welcome.sql`. Account Info > Company details: the owner can upload an image shown at the top of
+every user's home screen. Needs a public Storage bucket named `public-assets` (the SQL creates it).
+
+## Unique mobile number + customer self-service
+Run `supabase/mobile_unique.sql` then `supabase/customer_portal.sql` (after jewellery.sql and drafts_audit.sql).
+A ledger's mobile number must be unique per business. A customer goes to "Are you a customer? Sign in here" on the
+login page, enters the business code and their mobile number, and either signs in or sets a password the first time.
+They can then see their own ledger statement, browse in-stock items (Jewellery tags; add `tags.image_url` photos for a
+nicer look — not built yet is a photo-upload screen for tags), place simple orders, and chat with the owner/manager
+(Settings > Customer Chat on the staff side). Order fulfilment, invoicing from an order, and push notifications for
+new messages are not built yet.

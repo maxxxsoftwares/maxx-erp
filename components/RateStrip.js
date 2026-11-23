@@ -30,7 +30,7 @@ export default function RateStrip() {
   }, []);
   const live = d?.status === 'live';
   return (<div className="rbar">
-    <div className="rcell" style={{ flex: '0 0 auto' }}><b style={{ color: d ? (live ? '#059669' : '#dc2626') : '#64748b' }}>⚡ {!d ? t('connecting') : live ? t('mcxLive') : t('offline')}</b></div>
+    <div className="rcell" style={{ flex: '0 0 auto' }} title={d?.error || ''}><b style={{ color: d ? (live ? '#059669' : d.status === 'stale' ? '#b45309' : '#dc2626') : '#64748b' }}>⚡ {!d ? t('connecting') : live ? t('mcxLive') : d.status === 'stale' ? t('mcxStale') : t('offline')}</b>{d?.error && !live && <small style={{ color: '#64748b', maxWidth: 220, whiteSpace: 'normal' }}>{String(d.error).slice(0, 90)}</small>}</div>
     <Cell title={`${t('gold').toUpperCase()} (10g) 995`} r={d?.gold} dir={d?.dir?.gold} />
     <Cell title={`${t('silver').toUpperCase()} (1kg)`} r={d?.silver} dir={d?.dir?.silver} />
   </div>);

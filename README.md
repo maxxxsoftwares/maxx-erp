@@ -61,3 +61,10 @@ Forgot password: run `supabase/otp.sql`, then set WHATSAPP_API_URL, WHATSAPP_INS
 
 ## WhatsApp API settings
 Run `supabase/whatsapp.sql`. Settings > WhatsApp API (owner or manager): API URL, instance ID, token, country code, on/off and a test message. The token is stored encrypted on the server. Password reset codes use the business's own settings, else the WHATSAPP_* values in `.env.local`.
+
+## WhatsApp + Email
+WhatsApp uses your own server (default http://129.225.86.148:3000): Settings > WhatsApp API > Generate Instance / Token (OTP goes to the administrator), Generate QR to link the phone, Update to save. Run `supabase/whatsapp.sql`.
+Email goes through Gmail SMTP: Settings > Email settings (sender Gmail + app password). Run `supabase/email.sql`, then `npm install` (adds nodemailer).
+
+## Live rates on Vercel
+Vercel cannot keep a connection open, so on Vercel the server connects for a few seconds, saves the latest ticks in `mcx_rates` (run `supabase/mcx.sql`) and the strip refreshes about every 8 seconds. On localhost or your own server it stays connected and is truly live. Set NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY and SUPABASE_SERVICE_ROLE_KEY (and MCX_HUB_URL if changed) in the Vercel project settings, then redeploy.
